@@ -1,0 +1,58 @@
+---
+title: "DS 4002 Project 1"
+author: "Morgan Simmons"
+date: "2026-02-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+jobs <- read.csv("data_science_job_posts_2025.csv")
+
+ai_skills <- c(
+  "machine learning",
+  "deep learning",
+  "neural network",
+  "scikit-learn",
+  "pytorch",
+  "tensorflow",
+  "numpy"
+)
+
+```
+
+```{r}
+library(tidyverse)
+
+jobs_clean <- jobs %>%
+  select(job_title, location, headquarter, industry, skills) %>%
+  
+  # Only drop empty skill rows
+  filter(skills != "[]") %>%
+  
+  mutate(
+    skills = str_remove_all(skills, "\\[|\\]|\"|'")
+  ) %>%
+  
+  separate(
+    skills,
+    into = c("skill_1", "skill_2", "skill_3"),
+    sep = ",",
+    extra = "drop",
+    fill = "right"
+  ) %>%
+  
+  mutate(across(starts_with("skill_"), str_trim))
+
+jobs_clean <- jobs_clean %>%
+  mutate(
+    total_skills = rowSums(!is.na(across(starts_with("skill_")))),
+    ai_skill_count = rowSums(across(starts_with("skill_"), ~ .x %in% ai_skills), na.rm = TRUE),
+    ai_skill_ratio = ai_skill_count / total_skills
+  )
+
+```
+
